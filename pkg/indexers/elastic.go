@@ -81,11 +81,11 @@ func (esIndexer *Elastic) Index(index string, documents []interface{}) {
 		}
 	}
 	start := time.Now().UTC()
-	log.Infof("Indexing [%d] documents in %s", len(documents), index)
 	for _, document := range documents {
 		j, err := json.Marshal(document)
 		if err != nil {
 			log.Errorf("Cannot encode document %s: %s", document, err)
+			continue
 		}
 		err = bi.Add(
 			context.Background(),
@@ -103,5 +103,9 @@ func (esIndexer *Elastic) Index(index string, documents []interface{}) {
 	}
 	stats := bi.Stats()
 	dur := time.Since(start)
-	log.Infof("Successfully indexed [%d] documents in %s in %s", stats.NumFlushed, dur.Truncate(time.Millisecond), index)
+	if len(documents) != int(stats.NumFlushed) {
+		log.Warnf("Indexed [%d] documents out of [%d] in %s in %s", stats.NumFlushed, len(documents), dur.Truncate(time.Millisecond), index)
+	} else {
+		log.Infof("Indexed [%d] documents out of [%d] in %s in %s", stats.NumFlushed, len(documents), dur.Truncate(time.Millisecond), index)
+	}
 }

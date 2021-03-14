@@ -17,9 +17,9 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
     environment:
       name: kube-burner
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         golang-version: [1.14, 1.15]
