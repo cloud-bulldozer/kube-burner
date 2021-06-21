@@ -7,25 +7,23 @@ An example of a valid metrics profile file is shown below:
 The parameter **metricName** is added to the indexed documents, it will allow us to identify documents from a certain query more easily.
 
 ```yaml
-metrics:
-  - query: irate(process_cpu_seconds_total{job=~".*(crio|etcd|controller-manager|apiserver|scheduler).*"}[2m])
-    metricName: controlPlaneCPU
+- query: irate(process_cpu_seconds_total{job=~".*(crio|etcd|controller-manager|apiserver|scheduler).*"}[2m])
+  metricName: controlPlaneCPU
 
-  - query: process_resident_memory_bytes{job=~".*(crio|etcd|controller-manager|apiserver|scheduler).*"}
-    metricName: controlPlaneMemory
+- query: process_resident_memory_bytes{job=~".*(crio|etcd|controller-manager|apiserver|scheduler).*"}
+  metricName: controlPlaneMemory
 
-  - query: sum(irate(node_cpu_seconds_total[2m])) by (mode,instance)
-    metricName: nodeCPU
+- query: sum(irate(node_cpu_seconds_total[2m])) by (mode,instance)
+  metricName: nodeCPU
 ```
 
 
 It's also possible to execute instant queries from kube-burner by adding the flag instant to the desired metric. These kind of queries are useful to get only one sample for a static metric such as the number of nodes or the kube-apiserver version.
 
 ```yaml
-metrics:
-  - query: kube_node_role
-    metricName: nodeRoles
-    instant: true
+- query: kube_node_role
+  metricName: nodeRoles
+  instant: true
 ```
 
 ## Job Summary

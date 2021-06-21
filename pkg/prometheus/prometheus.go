@@ -39,10 +39,10 @@ import (
 
 // Prometheus describes the prometheus connection
 type Prometheus struct {
-	api            apiv1.API
-	MetricsProfile MetricsProfile
-	Step           time.Duration
-	uuid           string
+	api           apiv1.API
+	MetricProfile metrics
+	Step          time.Duration
+	uuid          string
 }
 
 // This object implements RoundTripper
@@ -53,16 +53,12 @@ type authTransport struct {
 	password  string
 }
 
-type metricDefinition struct {
+// MetricsProfile describes what metrics kube-burner collects
+type metrics []struct {
 	Query      string `yaml:"query"`
 	MetricName string `yaml:"metricName"`
 	IndexName  string `yaml:"indexName"`
 	Instant    bool   `yaml:"instant"`
-}
-
-// MetricsProfile describes what metrics kube-burner collects
-type MetricsProfile struct {
-	Metrics []metricDefinition `yaml:"metrics"`
 }
 
 type metric struct {
@@ -108,6 +104,7 @@ func NewPrometheusClient(url, token, username, password, uuid string, tlsVerify 
 		return &p, prometheusError(err)
 	}
 	p.api = apiv1.NewAPI(c)
+	// Verify Prometheus connection prior returning
 	if err := p.verifyConnection(); err != nil {
 		return &p, prometheusError(err)
 	}
@@ -131,7 +128,7 @@ func (p *Prometheus) ReadProfile(metricsProfile string) error {
 	}
 	yamlDec := yaml.NewDecoder(f)
 	yamlDec.KnownFields(true)
-	if err = yamlDec.Decode(&p.MetricsProfile); err != nil {
+	if err = yamlDec.Decode(&p.MetricProfile); err != nil {
 		return fmt.Errorf("Error decoding metrics profile %s: %s", metricsProfile, err)
 	}
 	return nil
@@ -157,7 +154,7 @@ func (p *Prometheus) scrapeMetrics(jobList []burner.Executor, start, end time.Ti
 	var err error
 	var v model.Value
 	log.Infof("🔍 Scraping prometheus metrics from %s to %s", start, end)
-	for _, md := range p.MetricsProfile.Metrics {
+	for _, md := range p.MetricProfile {
 		var metrics []interface{}
 		if md.Instant {
 			log.Infof("Instant query: %s", md.Query)
